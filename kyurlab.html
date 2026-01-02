@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kyurLab - Developer Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --bg-elevated: #1c2128;
+      --border-primary: #30363d;
+      --border-subtle: #21262d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-primary: #58a6ff;
+      --accent-secondary: #238636;
+      
+      --diff-add-bg: rgba(46, 160, 67, 0.15);
+      --diff-add-border: rgba(46, 160, 67, 0.4);
+      --diff-add-text: #7ee787;
+      --diff-add-highlight: rgba(46, 160, 67, 0.4);
+      
+      --diff-remove-bg: rgba(248, 81, 73, 0.15);
+      --diff-remove-border: rgba(248, 81, 73, 0.4);
+      --diff-remove-text: #ff7b72;
+      --diff-remove-highlight: rgba(248, 81, 73, 0.4);
+      
+      --diff-modify-bg: rgba(210, 153, 34, 0.15);
+      --diff-modify-border: rgba(210, 153, 34, 0.4);
+      --diff-modify-text: #e3b341;
+      --diff-modify-highlight: rgba(210, 153, 34, 0.4);
+
+      --current-highlight: rgba(88, 166, 255, 0.3);
+      
+      --json-key: #79c0ff;
+      --json-string: #a5d6ff;
+      --json-number: #7ee787;
+      --json-boolean: #ff7b72;
+      --json-null: #8b949e;
+      --json-bracket: #8b949e;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+      --transition-fast: 150ms ease;
+      --transition-normal: 250ms ease;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f6f8fa;
+      --bg-tertiary: #eaeef2;
+      --bg-elevated: #ffffff;
+      --border-primary: #d0d7de;
+      --border-subtle: #eaeef2;
+      --text-primary: #1f2328;
+      --text-secondary: #656d76;
+      --text-muted: #8c959f;
+      --accent-primary: #0969da;
+      --accent-secondary: #1a7f37;
+      
+      --diff-add-bg: rgba(46, 160, 67, 0.12);
+      --diff-add-border: rgba(46, 160, 67, 0.35);
+      --diff-add-text: #1a7f37;
+      --diff-add-highlight: rgba(46, 160, 67, 0.35);
+      
+      --diff-remove-bg: rgba(255, 129, 130, 0.12);
+      --diff-remove-border: rgba(255, 129, 130, 0.35);
+      --diff-remove-text: #cf222e;
+      --diff-remove-highlight: rgba(255, 129, 130, 0.35);
+      
+      --diff-modify-bg: rgba(210, 153, 34, 0.12);
+      --diff-modify-border: rgba(210, 153, 34, 0.35);
+      --diff-modify-text: #9a6700;
+      --diff-modify-highlight: rgba(210, 153, 34, 0.35);
+
+      --current-highlight: rgba(9, 105, 218, 0.2);
+      
+      --json-key: #0550ae;
+      --json-string: #0a3069;
+      --json-number: #116329;
+      --json-boolean: #cf222e;
+      --json-null: #8c959f;
+      --json-bracket: #656d76;
+
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: background var(--transition-normal), color var(--transition-normal);
+    }
+
+    /* Header */
+    .header {
+      padding: 12px 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-text {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span {
+      color: var(--accent-primary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Tabs */
+    .tabs-container {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-primary);
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition-fast);
+      font-family: inherit;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+    }
+
+    .tab.active {
+      color: var(--accent-primary);
+    }
+
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--accent-primary);
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: var(--accent-secondary);
+      color: white;
+      border-color: var(--accent-secondary);
+    }
+
+    .btn-success:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-color: var(--border-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-primary);
+    }
+
+    .btn-icon {
+      padding: 8px;
+      background: transparent;
+      border: 1px solid var(--border-primary);
+      color: var(--text-secondary);
+    }
+
+    .btn-icon:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    /* Tooltip */
+    .tooltip-wrapper {
+      position: relative;
+    }
+
+    .tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-fast);
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+      max-width: 250px;
+      white-space: normal;
+      text-align: center;
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--border-primary);
+    }
+
+    .tooltip-wrapper:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* ==================== CODE DIFF STYLES ==================== */
+    
+    .diff-stats-banner {
+      padding: 12px 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-primary);
+      display: none;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .diff-stats-banner.visible {
+      display: flex;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .stat-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .stat-added .stat-badge {
+      background: var(--diff-add-bg);
+      color: var(--diff-add-text);
+      border: 1px solid var(--diff-add-border);
+    }
+
+    .stat-removed .stat-badge {
+      background: var(--diff-remove-bg);
+      color: var(--diff-remove-text);
+      border: 1px solid var(--diff-remove-border);
+    }
+
+    .stat-modified .stat-badge {
+      background: var(--diff-modify-bg);
+      color: var(--diff-modify-text);
+      border: 1px solid var(--diff-modify-border);
+    }
+
+    .nav-info {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .nav-position {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .options-bar {
+      padding: 12px 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-primary);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .option-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .option-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .checkbox-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    .checkbox-wrapper input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent-primary);
+      cursor: pointer;
+    }
+
+    .checkbox-wrapper label {
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .checkbox-wrapper .option-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 8px 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--text-secondary);
+      opacity: 0;
+      visibility: hidden;
+      transition: all var(--transition-fast);
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+      max-width: 220px;
+      white-space: normal;
+      text-align: left;
+      line-height: 1.4;
+    }
+
+    .checkbox-wrapper .option-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--border-primary);
+    }
+
+    .checkbox-wrapper:hover .option-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .editor-container {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border-primary);
+      overflow: hidden;
+    }
+
+    .editor-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary);
+      overflow: hidden;
+    }
+
+    .editor-header {
+      padding: 10px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .editor-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .editor-actions .btn {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    .editor-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+      min-height: 0;
+    }
+
+    .line-numbers {
+      padding: 12px 0;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      text-align: right;
+      user-select: none;
+      min-width: 50px;
+      overflow: hidden;
+    }
+
+    .line-numbers .line-num {
+      padding: 0 12px;
+      display: block;
+    }
+
+    .code-area {
+      flex: 1;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      background: transparent;
+      color: var(--text-primary);
+      border: none;
+      outline: none;
+      resize: none;
+      white-space: pre;
+      overflow: auto;
+      tab-size: 2;
+    }
+
+    .code-area::placeholder {
+      color: var(--text-muted);
+    }
+
+    .diff-output {
+      flex: 1;
+      overflow: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      position: relative;
+      height: 100%;
+    }
+
+    .diff-line {
+      display: flex;
+      min-height: 21px;
+      transition: opacity var(--transition-fast);
+      position: relative;
+    }
+
+    .diff-line.dimmed {
+      opacity: 0.4;
+    }
+
+    .diff-line.current {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: -2px;
+      background: var(--current-highlight) !important;
+    }
+
+    .diff-line-num {
+      min-width: 50px;
+      padding: 0 12px;
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      text-align: right;
+      user-select: none;
+      border-right: 1px solid var(--border-primary);
+      flex-shrink: 0;
+    }
+
+    .diff-line-content {
+      flex: 1;
+      padding: 0 16px;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .diff-line-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    .merge-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-primary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all var(--transition-fast);
+      z-index: 10;
+    }
+
+    .merge-btn:hover {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+
+    .diff-line.current .merge-btn,
+    .diff-line:hover .merge-btn {
+      display: flex;
+    }
+
+    .diff-line.equal .merge-btn,
+    .diff-line.empty .merge-btn {
+      display: none !important;
+    }
+
+    .diff-line.added {
+      background: var(--diff-add-bg);
+    }
+
+    .diff-line.added .diff-line-num {
+      background: var(--diff-add-highlight);
+      color: var(--diff-add-text);
+    }
+
+    .diff-line.removed {
+      background: var(--diff-remove-bg);
+    }
+
+    .diff-line.removed .diff-line-num {
+      background: var(--diff-remove-highlight);
+      color: var(--diff-remove-text);
+    }
+
+    .diff-line.modified {
+      background: var(--diff-modify-bg);
+    }
+
+    .diff-line.modified .diff-line-num {
+      background: var(--diff-modify-highlight);
+      color: var(--diff-modify-text);
+    }
+
+    .char-add {
+      background: var(--diff-add-highlight);
+      border-radius: 2px;
+    }
+
+    .char-remove {
+      background: var(--diff-remove-highlight);
+      border-radius: 2px;
+    }
+
+    /* ==================== JSON FORMATTER STYLES ==================== */
+    
+    .json-toolbar {
+      padding: 12px 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .json-toolbar .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .json-toolbar .spacer {
+      flex: 1;
+    }
+
+    .indent-select {
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-primary);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .json-status {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .json-status.visible {
+      display: flex;
+    }
+
+    .json-status.success {
+      background: var(--diff-add-bg);
+      color: var(--diff-add-text);
+      border: 1px solid var(--diff-add-border);
+    }
+
+    .json-status.error {
+      background: var(--diff-remove-bg);
+      color: var(--diff-remove-text);
+      border: 1px solid var(--diff-remove-border);
+    }
+
+    .json-main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border-primary);
+      overflow: hidden;
+    }
+
+    .json-main.tree-view-active {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .json-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary);
+      overflow: hidden;
+    }
+
+    .json-panel-header {
+      padding: 10px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .json-panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .json-panel-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .json-input,
+    .json-output-area {
+      flex: 1;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      background: transparent;
+      color: var(--text-primary);
+      border: none;
+      outline: none;
+      resize: none;
+      white-space: pre;
+      overflow: auto;
+      tab-size: 2;
+    }
+
+    .json-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .json-output-area {
+      background: var(--bg-primary);
+    }
+
+    /* Syntax Highlight */
+    .json-key {
+      color: var(--json-key);
+    }
+
+    .json-string {
+      color: var(--json-string);
+    }
+
+    .json-number {
+      color: var(--json-number);
+    }
+
+    .json-boolean {
+      color: var(--json-boolean);
+    }
+
+    .json-null {
+      color: var(--json-null);
+    }
+
+    .json-bracket {
+      color: var(--json-bracket);
+    }
+
+    .json-error-line {
+      background: var(--diff-remove-bg);
+      display: block;
+      margin: 0 -16px;
+      padding: 0 16px;
+    }
+
+    /* Tree View */
+    .tree-view {
+      flex: 1;
+      padding: 16px;
+      overflow: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .tree-item {
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .tree-item::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--border-primary);
+    }
+
+    .tree-key {
+      color: var(--json-key);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tree-key:hover {
+      text-decoration: underline;
+    }
+
+    .tree-toggle {
+      display: inline-block;
+      width: 16px;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text-muted);
+    }
+
+    .tree-toggle:hover {
+      color: var(--text-primary);
+    }
+
+    .tree-value {
+      color: var(--json-string);
+    }
+
+    .tree-value.number {
+      color: var(--json-number);
+    }
+
+    .tree-value.boolean {
+      color: var(--json-boolean);
+    }
+
+    .tree-value.null {
+      color: var(--json-null);
+    }
+
+    .tree-children {
+      display: block;
+    }
+
+    .tree-children.collapsed {
+      display: none;
+    }
+
+    .tree-bracket {
+      color: var(--json-bracket);
+    }
+
+    .tree-comma {
+      color: var(--text-muted);
+    }
+
+    .tree-count {
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    /* ==================== COMMON STYLES ==================== */
+    
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-primary);
+      border-radius: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 12px 20px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      font-size: 14px;
+      color: var(--text-primary);
+      opacity: 0;
+      transition: all var(--transition-normal);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .help-panel {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 16px;
+      font-size: 13px;
+      z-index: 100;
+      max-width: 320px;
+      display: none;
+    }
+
+    .help-panel.visible {
+      display: block;
+    }
+
+    .help-panel h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .help-panel .shortcut-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .help-panel .shortcut-row:last-child {
+      border-bottom: none;
+    }
+
+    .help-panel kbd {
+      background: var(--bg-tertiary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      border: 1px solid var(--border-primary);
+    }
+
+    .help-panel .shortcut-desc {
+      color: var(--text-secondary);
+    }
+
+    .shortcut-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 12px 16px;
+      }
+
+      .tabs-container {
+        padding: 0 16px;
+      }
+
+      .editor-container,
+      .json-main {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+
+      .json-main.tree-view-active {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr 1fr;
+      }
+
+      .options-bar,
+      .json-toolbar {
+        padding: 10px 16px;
+        gap: 12px;
+      }
+
+      .nav-info {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-text">kyur<span>Lab</span></div>
+    </div>
+    <div class="header-actions">
+      <div class="tooltip-wrapper">
+        <button class="btn btn-icon" id="helpBtn">?</button>
+        <div class="tooltip">단축키 도움말</div>
+      </div>
+      <div class="tooltip-wrapper">
+        <button class="btn btn-icon" id="themeBtn">◐</button>
+        <div class="tooltip">다크/라이트 테마 전환</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs-container">
+    <div class="tabs">
+      <button class="tab active" data-tab="diff">Code Diff</button>
+      <button class="tab" data-tab="json">JSON Formatter</button>
+    </div>
+  </div>
+
+  <!-- Tab 1: Code Diff -->
+  <div class="tab-content active" id="tab-diff">
+    <div class="diff-stats-banner" id="diffStatsBanner">
+      <div class="stat-item stat-added">
+        <span>추가:</span>
+        <span class="stat-badge" id="statAdded">0줄</span>
+      </div>
+      <div class="stat-item stat-removed">
+        <span>삭제:</span>
+        <span class="stat-badge" id="statRemoved">0줄</span>
+      </div>
+      <div class="stat-item stat-modified">
+        <span>수정:</span>
+        <span class="stat-badge" id="statModified">0줄</span>
+      </div>
+      <div class="nav-info">
+        <span>현재 위치:</span>
+        <span class="nav-position" id="navPosition">-</span>
+        <span class="shortcut-hint">Alt+↑↓ 이동</span>
+      </div>
+    </div>
+
+    <div class="options-bar">
+      <div class="option-group">
+        <span class="option-label">옵션:</span>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="ignoreWhitespace">
+          <label for="ignoreWhitespace">공백 무시</label>
+          <div class="option-tooltip">탭, 스페이스 등 공백 문자의 차이를 무시하고 비교합니다.</div>
+        </div>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="ignoreCase">
+          <label for="ignoreCase">대소문자 무시</label>
+          <div class="option-tooltip">영문 대소문자의 차이를 무시하고 비교합니다.</div>
+        </div>
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="changesOnly">
+          <label for="changesOnly">변경사항만 표시</label>
+          <div class="option-tooltip">변경되지 않은 줄은 숨기고, 추가/삭제/수정된 줄만 보여줍니다.</div>
+        </div>
+      </div>
+      <div class="option-group" style="margin-left: auto;">
+        <div class="tooltip-wrapper">
+          <button class="btn btn-secondary" id="swapBtn">교환</button>
+          <div class="tooltip">좌우 패널의 코드를 서로 교환합니다</div>
+        </div>
+        <div class="tooltip-wrapper">
+          <button class="btn btn-secondary" id="clearDiffBtn">초기화</button>
+          <div class="tooltip">모든 입력 내용을 지웁니다</div>
+        </div>
+        <div class="tooltip-wrapper">
+          <button class="btn btn-primary" id="compareBtn">비교하기 <span class="shortcut-hint">Ctrl+Enter</span></button>
+          <div class="tooltip">두 코드의 차이점을 분석합니다</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-container" id="editorContainer">
+      <div class="editor-panel" id="leftPanel">
+        <div class="editor-header">
+          <span class="editor-title">Original (원본)</span>
+          <div class="editor-actions">
+            <button class="btn btn-secondary" data-action="paste" data-target="left">붙여넣기</button>
+          </div>
+        </div>
+        <div class="editor-body">
+          <div class="line-numbers" id="leftLineNumbers"></div>
+          <textarea class="code-area" id="leftCode" placeholder="원본 코드를 여기에 붙여넣으세요..." spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <div class="editor-panel" id="rightPanel">
+        <div class="editor-header">
+          <span class="editor-title">Modified (수정본)</span>
+          <div class="editor-actions">
+            <button class="btn btn-secondary" data-action="paste" data-target="right">붙여넣기</button>
+          </div>
+        </div>
+        <div class="editor-body">
+          <div class="line-numbers" id="rightLineNumbers"></div>
+          <textarea class="code-area" id="rightCode" placeholder="수정된 코드를 여기에 붙여넣으세요..." spellcheck="false"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: JSON Formatter -->
+  <div class="tab-content" id="tab-json">
+    <div class="json-toolbar">
+      <div class="btn-group">
+        <div class="tooltip-wrapper">
+          <button class="btn btn-primary" id="formatBtn">Format</button>
+          <div class="tooltip">JSON을 보기 좋게 정렬합니다 (Ctrl+Enter)</div>
+        </div>
+        <div class="tooltip-wrapper">
+          <button class="btn btn-secondary" id="minifyBtn">Minify</button>
+          <div class="tooltip">공백을 제거하여 한 줄로 압축합니다</div>
+        </div>
+        <div class="tooltip-wrapper">
+          <button class="btn btn-secondary" id="validateBtn">Validate</button>
+          <div class="tooltip">JSON 문법 오류를 검사합니다</div>
+        </div>
+      </div>
+      
+      <div class="option-group">
+        <label class="option-label">들여쓰기:</label>
+        <select class="indent-select" id="indentSelect">
+          <option value="2">2 spaces</option>
+          <option value="4">4 spaces</option>
+          <option value="tab">Tab</option>
+        </select>
+      </div>
+
+      <div class="checkbox-wrapper">
+        <input type="checkbox" id="treeViewToggle">
+        <label for="treeViewToggle">Tree View</label>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="btn-group">
+        <div class="tooltip-wrapper">
+          <button class="btn btn-secondary" id="copyJsonBtn">복사</button>
+          <div class="tooltip">결과를 클립보드에 복사합니다</div>
+        </div>
+        <div class="tooltip-wrapper">
+          <button class="btn btn-secondary" id="clearJsonBtn">초기화</button>
+          <div class="tooltip">입력 내용을 지웁니다</div>
+        </div>
+      </div>
+
+      <div class="json-status" id="jsonStatus"></div>
+    </div>
+
+    <div class="json-main" id="jsonMain">
+      <div class="json-panel">
+        <div class="json-panel-header">
+          <span class="json-panel-title">Input</span>
+          <div class="editor-actions">
+            <button class="btn btn-secondary" id="pasteJsonBtn">붙여넣기</button>
+          </div>
+        </div>
+        <div class="json-panel-body">
+          <textarea class="json-input" id="jsonInput" placeholder='JSON을 여기에 붙여넣으세요...
+
+예시:
+{"name":"홍길동","age":30,"skills":["JavaScript","Python"]}' spellcheck="false"></textarea>
+        </div>
+      </div>
+
+      <div class="json-panel">
+        <div class="json-panel-header">
+          <span class="json-panel-title">Output</span>
+        </div>
+        <div class="json-panel-body">
+          <pre class="json-output-area" id="jsonOutput"></pre>
+        </div>
+      </div>
+
+      <div class="json-panel" id="treePanel" style="display: none;">
+        <div class="json-panel-header">
+          <span class="json-panel-title">Tree View</span>
+        </div>
+        <div class="json-panel-body">
+          <div class="tree-view" id="treeView"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Panel -->
+  <div class="help-panel" id="helpPanel">
+    <h4>⌨️ 단축키 안내</h4>
+    <div id="helpContent"></div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /**
+     * kyurLab - Developer Tools
+     * Tab-based multi-tool application
+     */
+    const KyurLab = (() => {
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => document.querySelectorAll(selector);
+      
+      let state = {
+        theme: localStorage.getItem('kyurlab-theme') || 'dark',
+        currentTab: 'diff',
+        // Diff state
+        diffCompared: false,
+        diffResult: null,
+        originalLeft: '',
+        originalRight: '',
+        changeIndices: [],
+        currentChangeIndex: -1,
+      };
+
+      // ==================== COMMON ====================
+      
+      const init = () => {
+        applyTheme(state.theme);
+        initTabs();
+        initDiff();
+        initJson();
+        initCommon();
+      };
+
+      const initCommon = () => {
+        $('#themeBtn').addEventListener('click', toggleTheme);
+        $('#helpBtn').addEventListener('click', toggleHelp);
+        
+        document.addEventListener('click', (e) => {
+          if (!$('#helpPanel').contains(e.target) && !$('#helpBtn').contains(e.target)) {
+            $('#helpPanel').classList.remove('visible');
+          }
+        });
+
+        document.addEventListener('keydown', handleGlobalKeydown);
+      };
+
+      const handleGlobalKeydown = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          if (state.currentTab === 'diff') {
+            compareDiff();
+          } else if (state.currentTab === 'json') {
+            formatJson();
+          }
+          return;
+        }
+
+        if (e.altKey && state.currentTab === 'diff' && state.diffCompared) {
+          if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            navigateChange(-1);
+          } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            navigateChange(1);
+          } else if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            mergeCurrentChange('left');
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            mergeCurrentChange('right');
+          }
+        }
+      };
+
+      const applyTheme = (theme) => {
+        document.documentElement.setAttribute('data-theme', theme);
+      };
+
+      const toggleTheme = () => {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('kyurlab-theme', state.theme);
+        applyTheme(state.theme);
+        showToast(`${state.theme === 'dark' ? '다크' : '라이트'} 모드`);
+      };
+
+      const toggleHelp = () => {
+        const panel = $('#helpPanel');
+        panel.classList.toggle('visible');
+        updateHelpContent();
+      };
+
+      const updateHelpContent = () => {
+        const diffHelp = `
+          <div class="shortcut-row"><span class="shortcut-desc">비교 실행</span><kbd>Ctrl + Enter</kbd></div>
+          <div class="shortcut-row"><span class="shortcut-desc">이전 변경점</span><kbd>Alt + ↑</kbd></div>
+          <div class="shortcut-row"><span class="shortcut-desc">다음 변경점</span><kbd>Alt + ↓</kbd></div>
+          <div class="shortcut-row"><span class="shortcut-desc">왼쪽으로 병합</span><kbd>Alt + ←</kbd></div>
+          <div class="shortcut-row"><span class="shortcut-desc">오른쪽으로 병합</span><kbd>Alt + →</kbd></div>
+        `;
+        const jsonHelp = `
+          <div class="shortcut-row"><span class="shortcut-desc">Format 실행</span><kbd>Ctrl + Enter</kbd></div>
+        `;
+        $('#helpContent').innerHTML = state.currentTab === 'diff' ? diffHelp : jsonHelp;
+      };
+
+      const showToast = (message) => {
+        const toast = $('#toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      };
+
+      // ==================== TABS ====================
+      
+      const initTabs = () => {
+        $$('.tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            const tabId = tab.dataset.tab;
+            switchTab(tabId);
+          });
+        });
+      };
+
+      const switchTab = (tabId) => {
+        state.currentTab = tabId;
+        
+        $$('.tab').forEach(t => t.classList.remove('active'));
+        $(`.tab[data-tab="${tabId}"]`).classList.add('active');
+        
+        $$('.tab-content').forEach(c => c.classList.remove('active'));
+        $(`#tab-${tabId}`).classList.add('active');
+        
+        updateHelpContent();
+      };
+
+      // ==================== CODE DIFF ====================
+      
+      const diffElements = () => ({
+        leftCode: $('#leftCode'),
+        rightCode: $('#rightCode'),
+        leftLineNumbers: $('#leftLineNumbers'),
+        rightLineNumbers: $('#rightLineNumbers'),
+        leftPanel: $('#leftPanel'),
+        rightPanel: $('#rightPanel'),
+        statsBanner: $('#diffStatsBanner'),
+        statAdded: $('#statAdded'),
+        statRemoved: $('#statRemoved'),
+        statModified: $('#statModified'),
+        navPosition: $('#navPosition'),
+        ignoreWhitespace: $('#ignoreWhitespace'),
+        ignoreCase: $('#ignoreCase'),
+        changesOnly: $('#changesOnly'),
+      });
+
+      const initDiff = () => {
+        const els = diffElements();
+        
+        els.leftCode.addEventListener('input', () => updateLineNumbers(els.leftCode, els.leftLineNumbers));
+        els.rightCode.addEventListener('input', () => updateLineNumbers(els.rightCode, els.rightLineNumbers));
+        els.leftCode.addEventListener('paste', () => setTimeout(() => updateLineNumbers(els.leftCode, els.leftLineNumbers), 0));
+        els.rightCode.addEventListener('paste', () => setTimeout(() => updateLineNumbers(els.rightCode, els.rightLineNumbers), 0));
+        els.leftCode.addEventListener('scroll', () => syncScroll(els.leftCode, els.leftLineNumbers));
+        els.rightCode.addEventListener('scroll', () => syncScroll(els.rightCode, els.rightLineNumbers));
+
+        $('#compareBtn').addEventListener('click', compareDiff);
+        $('#clearDiffBtn').addEventListener('click', clearDiff);
+        $('#swapBtn').addEventListener('click', swapDiff);
+
+        $$('[data-action="paste"]').forEach(btn => {
+          btn.addEventListener('click', (e) => pasteToTarget(e.currentTarget.dataset.target));
+        });
+
+        els.ignoreWhitespace.addEventListener('change', recompareDiff);
+        els.ignoreCase.addEventListener('change', recompareDiff);
+        els.changesOnly.addEventListener('change', () => {
+          if (state.diffCompared && state.diffResult) renderDiff(state.diffResult);
+        });
+
+        [els.leftCode, els.rightCode].forEach(textarea => {
+          textarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              const start = textarea.selectionStart;
+              const end = textarea.selectionEnd;
+              textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
+              textarea.selectionStart = textarea.selectionEnd = start + 2;
+            }
+          });
+        });
+
+        updateLineNumbers(els.leftCode, els.leftLineNumbers);
+        updateLineNumbers(els.rightCode, els.rightLineNumbers);
+      };
+
+      const updateLineNumbers = (textarea, lineNumbersEl) => {
+        const lines = textarea.value.split('\n');
+        lineNumbersEl.innerHTML = lines.map((_, i) => `<span class="line-num">${i + 1}</span>`).join('');
+      };
+
+      const syncScroll = (textarea, lineNumbers) => {
+        lineNumbers.scrollTop = textarea.scrollTop;
+      };
+
+      const pasteToTarget = async (target) => {
+        try {
+          const text = await navigator.clipboard.readText();
+          const els = diffElements();
+          const textarea = target === 'left' ? els.leftCode : els.rightCode;
+          const lineNumbers = target === 'left' ? els.leftLineNumbers : els.rightLineNumbers;
+          textarea.value = text;
+          updateLineNumbers(textarea, lineNumbers);
+          showToast('붙여넣기 완료');
+        } catch (err) {
+          showToast('클립보드 접근 불가');
+        }
+      };
+
+      const clearDiff = () => {
+        resetDiffToInputMode();
+        const els = diffElements();
+        els.leftCode.value = '';
+        els.rightCode.value = '';
+        updateLineNumbers(els.leftCode, els.leftLineNumbers);
+        updateLineNumbers(els.rightCode, els.rightLineNumbers);
+        state.diffCompared = false;
+        state.diffResult = null;
+        state.changeIndices = [];
+        state.currentChangeIndex = -1;
+        els.statsBanner.classList.remove('visible');
+        showToast('초기화 완료');
+      };
+
+      const swapDiff = () => {
+        const els = diffElements();
+        const leftVal = els.leftCode?.value || '';
+        const rightVal = els.rightCode?.value || '';
+        if (els.leftCode && els.rightCode) {
+          els.leftCode.value = rightVal;
+          els.rightCode.value = leftVal;
+          updateLineNumbers(els.leftCode, els.leftLineNumbers);
+          updateLineNumbers(els.rightCode, els.rightLineNumbers);
+        }
+        if (state.diffCompared) compareDiff();
+        showToast('교환 완료');
+      };
+
+      const resetDiffToInputMode = () => {
+        const leftPanel = $('#leftPanel');
+        const rightPanel = $('#rightPanel');
+        
+        leftPanel.innerHTML = `
+          <div class="editor-header">
+            <span class="editor-title">Original (원본)</span>
+            <div class="editor-actions">
+              <button class="btn btn-secondary" data-action="paste" data-target="left">붙여넣기</button>
+            </div>
+          </div>
+          <div class="editor-body">
+            <div class="line-numbers" id="leftLineNumbers"></div>
+            <textarea class="code-area" id="leftCode" placeholder="원본 코드를 여기에 붙여넣으세요..." spellcheck="false"></textarea>
+          </div>
+        `;
+        
+        rightPanel.innerHTML = `
+          <div class="editor-header">
+            <span class="editor-title">Modified (수정본)</span>
+            <div class="editor-actions">
+              <button class="btn btn-secondary" data-action="paste" data-target="right">붙여넣기</button>
+            </div>
+          </div>
+          <div class="editor-body">
+            <div class="line-numbers" id="rightLineNumbers"></div>
+            <textarea class="code-area" id="rightCode" placeholder="수정된 코드를 여기에 붙여넣으세요..." spellcheck="false"></textarea>
+          </div>
+        `;
+
+        const els = diffElements();
+        els.leftCode.addEventListener('input', () => updateLineNumbers(els.leftCode, els.leftLineNumbers));
+        els.rightCode.addEventListener('input', () => updateLineNumbers(els.rightCode, els.rightLineNumbers));
+        els.leftCode.addEventListener('paste', () => setTimeout(() => updateLineNumbers(els.leftCode, els.leftLineNumbers), 0));
+        els.rightCode.addEventListener('paste', () => setTimeout(() => updateLineNumbers(els.rightCode, els.rightLineNumbers), 0));
+        els.leftCode.addEventListener('scroll', () => syncScroll(els.leftCode, els.leftLineNumbers));
+        els.rightCode.addEventListener('scroll', () => syncScroll(els.rightCode, els.rightLineNumbers));
+
+        [els.leftCode, els.rightCode].forEach(textarea => {
+          textarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              const start = textarea.selectionStart;
+              const end = textarea.selectionEnd;
+              textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
+              textarea.selectionStart = textarea.selectionEnd = start + 2;
+            }
+          });
+        });
+
+        $$('[data-action="paste"]').forEach(btn => {
+          btn.addEventListener('click', (e) => pasteToTarget(e.currentTarget.dataset.target));
+        });
+
+        updateLineNumbers(els.leftCode, els.leftLineNumbers);
+        updateLineNumbers(els.rightCode, els.rightLineNumbers);
+      };
+
+      const computeDiff = (original, modified) => {
+        const els = diffElements();
+        const ignoreWs = els.ignoreWhitespace.checked;
+        const ignoreCase = els.ignoreCase.checked;
+
+        const normalize = (line) => {
+          let result = line;
+          if (ignoreWs) result = result.replace(/\s+/g, ' ').trim();
+          if (ignoreCase) result = result.toLowerCase();
+          return result;
+        };
+
+        const originalLines = original.split('\n');
+        const modifiedLines = modified.split('\n');
+        const normalizedOriginal = originalLines.map(normalize);
+        const normalizedModified = modifiedLines.map(normalize);
+
+        const m = normalizedOriginal.length;
+        const n = normalizedModified.length;
+        const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+        
+        for (let i = 1; i <= m; i++) {
+          for (let j = 1; j <= n; j++) {
+            if (normalizedOriginal[i - 1] === normalizedModified[j - 1]) {
+              dp[i][j] = dp[i - 1][j - 1] + 1;
+            } else {
+              dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            }
+          }
+        }
+
+        const result = { left: [], right: [], stats: { added: 0, removed: 0, modified: 0 } };
+        let i = m, j = n;
+        const operations = [];
+
+        while (i > 0 || j > 0) {
+          if (i > 0 && j > 0 && normalizedOriginal[i - 1] === normalizedModified[j - 1]) {
+            operations.unshift({ type: 'equal', leftIdx: i - 1, rightIdx: j - 1 });
+            i--; j--;
+          } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+            operations.unshift({ type: 'add', rightIdx: j - 1 });
+            j--;
+          } else if (i > 0) {
+            operations.unshift({ type: 'remove', leftIdx: i - 1 });
+            i--;
+          }
+        }
+
+        let leftLineNum = 1, rightLineNum = 1, opIdx = 0;
+
+        while (opIdx < operations.length) {
+          const op = operations[opIdx];
+
+          if (op.type === 'equal') {
+            result.left.push({ type: 'equal', lineNum: leftLineNum++, content: originalLines[op.leftIdx] });
+            result.right.push({ type: 'equal', lineNum: rightLineNum++, content: modifiedLines[op.rightIdx] });
+            opIdx++;
+          } else if (op.type === 'remove' && opIdx + 1 < operations.length && operations[opIdx + 1].type === 'add') {
+            const leftContent = originalLines[op.leftIdx];
+            const rightContent = modifiedLines[operations[opIdx + 1].rightIdx];
+            const similarity = calculateSimilarity(leftContent, rightContent);
+            
+            if (similarity > 0.3) {
+              const charDiff = computeCharDiff(leftContent, rightContent);
+              result.left.push({ type: 'modified', lineNum: leftLineNum++, content: leftContent, charDiff: charDiff.left });
+              result.right.push({ type: 'modified', lineNum: rightLineNum++, content: rightContent, charDiff: charDiff.right });
+              result.stats.modified++;
+              opIdx += 2;
+            } else {
+              result.left.push({ type: 'removed', lineNum: leftLineNum++, content: leftContent });
+              result.right.push({ type: 'empty', lineNum: '', content: '' });
+              result.stats.removed++;
+              opIdx++;
+            }
+          } else if (op.type === 'remove') {
+            result.left.push({ type: 'removed', lineNum: leftLineNum++, content: originalLines[op.leftIdx] });
+            result.right.push({ type: 'empty', lineNum: '', content: '' });
+            result.stats.removed++;
+            opIdx++;
+          } else if (op.type === 'add') {
+            result.left.push({ type: 'empty', lineNum: '', content: '' });
+            result.right.push({ type: 'added', lineNum: rightLineNum++, content: modifiedLines[op.rightIdx] });
+            result.stats.added++;
+            opIdx++;
+          } else {
+            opIdx++;
+          }
+        }
+
+        return result;
+      };
+
+      const calculateSimilarity = (str1, str2) => {
+        if (str1 === str2) return 1;
+        if (!str1.length || !str2.length) return 0;
+        const len1 = str1.length, len2 = str2.length;
+        const maxLen = Math.max(len1, len2);
+        if (Math.abs(len1 - len2) / maxLen > 0.5) return 0;
+
+        let prev = Array.from({ length: len2 + 1 }, (_, i) => i);
+        let curr = new Array(len2 + 1);
+        for (let i = 1; i <= len1; i++) {
+          curr[0] = i;
+          for (let j = 1; j <= len2; j++) {
+            curr[j] = str1[i - 1] === str2[j - 1] ? prev[j - 1] : 1 + Math.min(prev[j - 1], prev[j], curr[j - 1]);
+          }
+          [prev, curr] = [curr, prev];
+        }
+        return 1 - prev[len2] / maxLen;
+      };
+
+      const computeCharDiff = (left, right) => {
+        const m = left.length, n = right.length;
+        const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+        
+        for (let i = 1; i <= m; i++) {
+          for (let j = 1; j <= n; j++) {
+            dp[i][j] = left[i - 1] === right[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+          }
+        }
+
+        const leftResult = [], rightResult = [];
+        let i = m, j = n;
+        while (i > 0 || j > 0) {
+          if (i > 0 && j > 0 && left[i - 1] === right[j - 1]) {
+            leftResult.unshift({ char: left[i - 1], type: 'equal' });
+            rightResult.unshift({ char: right[j - 1], type: 'equal' });
+            i--; j--;
+          } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+            rightResult.unshift({ char: right[j - 1], type: 'add' });
+            j--;
+          } else if (i > 0) {
+            leftResult.unshift({ char: left[i - 1], type: 'remove' });
+            i--;
+          }
+        }
+        return { left: leftResult, right: rightResult };
+      };
+
+      const renderDiff = (diffResult) => {
+        const els = diffElements();
+        const changesOnly = els.changesOnly.checked;
+
+        const renderPanel = (data, isLeft) => {
+          return data.map((line, idx) => {
+            const isChanged = line.type !== 'equal' && line.type !== 'empty';
+            const otherLine = isLeft ? diffResult.right[idx] : diffResult.left[idx];
+            const otherChanged = otherLine && otherLine.type !== 'equal' && otherLine.type !== 'empty';
+            
+            if (changesOnly && !isChanged && !otherChanged) return '';
+
+            const dimmed = !changesOnly && !isChanged && line.type !== 'empty' ? 'dimmed' : '';
+            let content = '';
+            
+            if (line.charDiff) {
+              content = line.charDiff.map(({ char, type }) => 
+                type === 'equal' ? escapeHtml(char) : `<span class="char-${type === 'add' ? 'add' : 'remove'}">${escapeHtml(char)}</span>`
+              ).join('');
+            } else {
+              content = escapeHtml(line.content);
+            }
+
+            const mergeBtn = (isChanged || otherChanged) ? 
+              `<button class="merge-btn" data-index="${idx}" data-direction="${isLeft ? 'right' : 'left'}">${isLeft ? '→' : '←'}</button>` : '';
+
+            return `<div class="diff-line ${line.type} ${dimmed}" data-index="${idx}">
+              <div class="diff-line-num">${line.lineNum}</div>
+              <div class="diff-line-content">${content}</div>
+              ${mergeBtn}
+            </div>`;
+          }).join('');
+        };
+
+        $('#leftPanel').innerHTML = `
+          <div class="editor-header">
+            <span class="editor-title">Original (원본)</span>
+            <div class="editor-actions"><button class="btn btn-secondary" id="editLeftBtn">편집</button></div>
+          </div>
+          <div class="editor-body"><div class="diff-output" id="leftDiffOutput">${renderPanel(diffResult.left, true)}</div></div>
+        `;
+
+        $('#rightPanel').innerHTML = `
+          <div class="editor-header">
+            <span class="editor-title">Modified (수정본)</span>
+            <div class="editor-actions"><button class="btn btn-secondary" id="editRightBtn">편집</button></div>
+          </div>
+          <div class="editor-body"><div class="diff-output" id="rightDiffOutput">${renderPanel(diffResult.right, false)}</div></div>
+        `;
+
+        const leftOutput = $('#leftDiffOutput');
+        const rightOutput = $('#rightDiffOutput');
+
+        const syncDiffScroll = (source, target) => {
+          target.scrollTop = source.scrollTop;
+          target.scrollLeft = source.scrollLeft;
+        };
+        leftOutput.addEventListener('scroll', () => syncDiffScroll(leftOutput, rightOutput));
+        rightOutput.addEventListener('scroll', () => syncDiffScroll(rightOutput, leftOutput));
+
+        const backToEdit = () => {
+          resetDiffToInputMode();
+          const els = diffElements();
+          els.leftCode.value = state.originalLeft;
+          els.rightCode.value = state.originalRight;
+          updateLineNumbers(els.leftCode, els.leftLineNumbers);
+          updateLineNumbers(els.rightCode, els.rightLineNumbers);
+          state.diffCompared = false;
+          state.changeIndices = [];
+          state.currentChangeIndex = -1;
+          diffElements().statsBanner.classList.remove('visible');
+        };
+
+        $('#editLeftBtn').addEventListener('click', backToEdit);
+        $('#editRightBtn').addEventListener('click', backToEdit);
+
+        // Merge buttons
+        $$('.merge-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(btn.dataset.index);
+            const dir = btn.dataset.direction;
+            const changeIdx = state.changeIndices.indexOf(idx);
+            if (changeIdx !== -1) {
+              state.currentChangeIndex = changeIdx;
+              mergeCurrentChange(dir);
+            }
+          });
+        });
+
+        // Click to select
+        $$('.diff-line').forEach(line => {
+          line.addEventListener('click', () => {
+            const idx = parseInt(line.dataset.index);
+            const changeIdx = state.changeIndices.indexOf(idx);
+            if (changeIdx !== -1) {
+              state.currentChangeIndex = changeIdx;
+              highlightCurrentChange();
+              updateNavPosition();
+            }
+          });
+        });
+
+        updateChangeIndices();
+        if (state.currentChangeIndex >= 0 && state.currentChangeIndex < state.changeIndices.length) {
+          highlightCurrentChange();
+        }
+      };
+
+      const compareDiff = () => {
+        const els = diffElements();
+        const leftVal = els.leftCode?.value || '';
+        const rightVal = els.rightCode?.value || '';
+
+        if (!leftVal.trim() && !rightVal.trim()) {
+          showToast('코드를 입력해주세요');
+          return;
+        }
+
+        state.originalLeft = leftVal;
+        state.originalRight = rightVal;
+        state.diffResult = computeDiff(leftVal, rightVal);
+        state.diffCompared = true;
+        state.currentChangeIndex = -1;
+
+        els.statAdded.textContent = `${state.diffResult.stats.added}줄`;
+        els.statRemoved.textContent = `${state.diffResult.stats.removed}줄`;
+        els.statModified.textContent = `${state.diffResult.stats.modified}줄`;
+        els.statsBanner.classList.add('visible');
+
+        renderDiff(state.diffResult);
+        updateChangeIndices();
+        updateNavPosition();
+        showToast('비교 완료');
+      };
+
+      const recompareDiff = () => {
+        if (state.diffCompared && state.originalLeft !== undefined) {
+          state.diffResult = computeDiff(state.originalLeft, state.originalRight);
+          state.currentChangeIndex = -1;
+          const els = diffElements();
+          els.statAdded.textContent = `${state.diffResult.stats.added}줄`;
+          els.statRemoved.textContent = `${state.diffResult.stats.removed}줄`;
+          els.statModified.textContent = `${state.diffResult.stats.modified}줄`;
+          renderDiff(state.diffResult);
+          updateChangeIndices();
+          updateNavPosition();
+        }
+      };
+
+      const updateChangeIndices = () => {
+        state.changeIndices = [];
+        if (!state.diffResult) return;
+        state.diffResult.left.forEach((line, idx) => {
+          if (line.type !== 'equal' && line.type !== 'empty') {
+            state.changeIndices.push(idx);
+          } else if (state.diffResult.right[idx]?.type !== 'equal' && state.diffResult.right[idx]?.type !== 'empty') {
+            state.changeIndices.push(idx);
+          }
+        });
+      };
+
+      const updateNavPosition = () => {
+        const els = diffElements();
+        els.navPosition.textContent = state.changeIndices.length === 0 ? '-' : `${state.currentChangeIndex + 1} / ${state.changeIndices.length}`;
+      };
+
+      const navigateChange = (direction) => {
+        if (state.changeIndices.length === 0) {
+          showToast('변경사항 없음');
+          return;
+        }
+        let newIndex = state.currentChangeIndex + direction;
+        if (newIndex < 0) newIndex = state.changeIndices.length - 1;
+        else if (newIndex >= state.changeIndices.length) newIndex = 0;
+        state.currentChangeIndex = newIndex;
+        highlightCurrentChange();
+        updateNavPosition();
+      };
+
+      const highlightCurrentChange = () => {
+        $$('.diff-line.current').forEach(el => el.classList.remove('current'));
+        if (state.currentChangeIndex < 0 || state.currentChangeIndex >= state.changeIndices.length) return;
+
+        const lineIndex = state.changeIndices[state.currentChangeIndex];
+        const leftOutput = document.getElementById('leftDiffOutput');
+        const rightOutput = document.getElementById('rightDiffOutput');
+        if (!leftOutput || !rightOutput) return;
+
+        const targetLeftLine = leftOutput.querySelector(`.diff-line[data-index="${lineIndex}"]`);
+        const targetRightLine = rightOutput.querySelector(`.diff-line[data-index="${lineIndex}"]`);
+
+        if (targetLeftLine) targetLeftLine.classList.add('current');
+        if (targetRightLine) targetRightLine.classList.add('current');
+
+        if (targetLeftLine) {
+          const lineTop = targetLeftLine.offsetTop;
+          const lineHeight = targetLeftLine.offsetHeight;
+          const containerHeight = leftOutput.clientHeight;
+          const targetScrollTop = Math.max(0, lineTop - (containerHeight / 2) + (lineHeight / 2));
+          leftOutput.scrollTop = targetScrollTop;
+          rightOutput.scrollTop = targetScrollTop;
+        }
+      };
+
+      const mergeCurrentChange = (direction) => {
+        if (state.currentChangeIndex < 0 || !state.diffResult) {
+          showToast('변경점을 선택하세요 (Alt+↑↓)');
+          return;
+        }
+
+        const lineIndex = state.changeIndices[state.currentChangeIndex];
+        const leftLine = state.diffResult.left[lineIndex];
+        const rightLine = state.diffResult.right[lineIndex];
+
+        if (direction === 'right') {
+          if (leftLine.type === 'removed' || leftLine.type === 'modified') {
+            state.diffResult.right[lineIndex] = { ...leftLine, type: 'equal' };
+            state.diffResult.left[lineIndex] = { ...leftLine, type: 'equal' };
+            delete state.diffResult.left[lineIndex].charDiff;
+            delete state.diffResult.right[lineIndex].charDiff;
+            showToast('← 원본으로 병합');
+          } else if (rightLine.type === 'added') {
+            state.diffResult.right[lineIndex] = { type: 'empty', lineNum: '', content: '' };
+            state.diffResult.left[lineIndex] = { type: 'empty', lineNum: '', content: '' };
+            showToast('추가된 줄 삭제');
+          }
+        } else {
+          if (rightLine.type === 'added' || rightLine.type === 'modified') {
+            state.diffResult.left[lineIndex] = { ...rightLine, type: 'equal' };
+            state.diffResult.right[lineIndex] = { ...rightLine, type: 'equal' };
+            delete state.diffResult.left[lineIndex].charDiff;
+            delete state.diffResult.right[lineIndex].charDiff;
+            showToast('→ 수정본으로 병합');
+          } else if (leftLine.type === 'removed') {
+            state.diffResult.left[lineIndex] = { type: 'empty', lineNum: '', content: '' };
+            state.diffResult.right[lineIndex] = { type: 'empty', lineNum: '', content: '' };
+            showToast('삭제된 줄 제거');
+          }
+        }
+
+        updateChangeIndices();
+        renderDiff(state.diffResult);
+        updateDiffStats();
+        if (state.changeIndices.length > 0) {
+          if (state.currentChangeIndex >= state.changeIndices.length) {
+            state.currentChangeIndex = state.changeIndices.length - 1;
+          }
+          highlightCurrentChange();
+        }
+        updateNavPosition();
+      };
+
+      const updateDiffStats = () => {
+        let added = 0, removed = 0, modified = 0;
+        state.diffResult.left.forEach((line, idx) => {
+          if (line.type === 'removed') removed++;
+          else if (line.type === 'modified') modified++;
+          if (state.diffResult.right[idx]?.type === 'added') added++;
+        });
+        const els = diffElements();
+        els.statAdded.textContent = `${added}줄`;
+        els.statRemoved.textContent = `${removed}줄`;
+        els.statModified.textContent = `${modified}줄`;
+      };
+
+      const escapeHtml = (str) => {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      };
+
+      // ==================== JSON FORMATTER ====================
+      
+      const initJson = () => {
+        $('#formatBtn').addEventListener('click', formatJson);
+        $('#minifyBtn').addEventListener('click', minifyJson);
+        $('#validateBtn').addEventListener('click', validateJson);
+        $('#copyJsonBtn').addEventListener('click', copyJsonOutput);
+        $('#clearJsonBtn').addEventListener('click', clearJson);
+        $('#pasteJsonBtn').addEventListener('click', pasteJson);
+        $('#treeViewToggle').addEventListener('change', toggleTreeView);
+        
+        $('#jsonInput').addEventListener('input', () => {
+          hideJsonStatus();
+        });
+      };
+
+      const formatJson = () => {
+        const input = $('#jsonInput').value.trim();
+        if (!input) {
+          showJsonStatus('error', '⚠️ JSON을 입력해주세요');
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(input);
+          const indent = getIndent();
+          const formatted = JSON.stringify(parsed, null, indent);
+          $('#jsonOutput').innerHTML = syntaxHighlight(formatted);
+          showJsonStatus('success', '✓ Format 완료');
+          
+          if ($('#treeViewToggle').checked) {
+            renderTreeView(parsed);
+          }
+        } catch (e) {
+          handleJsonError(e, input);
+        }
+      };
+
+      const minifyJson = () => {
+        const input = $('#jsonInput').value.trim();
+        if (!input) {
+          showJsonStatus('error', '⚠️ JSON을 입력해주세요');
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(input);
+          const minified = JSON.stringify(parsed);
+          $('#jsonOutput').innerHTML = syntaxHighlight(minified);
+          showJsonStatus('success', '✓ Minify 완료');
+          
+          if ($('#treeViewToggle').checked) {
+            renderTreeView(parsed);
+          }
+        } catch (e) {
+          handleJsonError(e, input);
+        }
+      };
+
+      const validateJson = () => {
+        const input = $('#jsonInput').value.trim();
+        if (!input) {
+          showJsonStatus('error', '⚠️ JSON을 입력해주세요');
+          return;
+        }
+
+        try {
+          JSON.parse(input);
+          showJsonStatus('success', '✓ 유효한 JSON입니다');
+        } catch (e) {
+          handleJsonError(e, input);
+        }
+      };
+
+      const handleJsonError = (error, input) => {
+        const match = error.message.match(/position (\d+)/);
+        let errorMsg = `✗ ${error.message}`;
+        
+        if (match) {
+          const pos = parseInt(match[1]);
+          const lines = input.substring(0, pos).split('\n');
+          const line = lines.length;
+          const col = lines[lines.length - 1].length + 1;
+          errorMsg = `✗ 오류 위치: ${line}행 ${col}열 - ${error.message}`;
+          
+          // Highlight error line in output
+          const allLines = input.split('\n');
+          const highlighted = allLines.map((l, idx) => {
+            if (idx === line - 1) {
+              return `<span class="json-error-line">${escapeHtml(l)}</span>`;
+            }
+            return escapeHtml(l);
+          }).join('\n');
+          $('#jsonOutput').innerHTML = `<code>${highlighted}</code>`;
+          
+          // Scroll to error
+          const output = $('#jsonOutput');
+          const lineHeight = 21;
+          output.scrollTop = (line - 1) * lineHeight - output.clientHeight / 2;
+        } else {
+          $('#jsonOutput').textContent = input;
+        }
+        
+        showJsonStatus('error', errorMsg);
+      };
+
+      const getIndent = () => {
+        const val = $('#indentSelect').value;
+        return val === 'tab' ? '\t' : parseInt(val);
+      };
+
+      const syntaxHighlight = (json) => {
+        const escaped = escapeHtml(json);
+        return escaped.replace(
+          /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+          (match) => {
+            let cls = 'json-number';
+            if (/^"/.test(match)) {
+              if (/:$/.test(match)) {
+                cls = 'json-key';
+              } else {
+                cls = 'json-string';
+              }
+            } else if (/true|false/.test(match)) {
+              cls = 'json-boolean';
+            } else if (/null/.test(match)) {
+              cls = 'json-null';
+            }
+            return `<span class="${cls}">${match}</span>`;
+          }
+        );
+      };
+
+      const showJsonStatus = (type, message) => {
+        const status = $('#jsonStatus');
+        status.className = `json-status visible ${type}`;
+        status.textContent = message;
+      };
+
+      const hideJsonStatus = () => {
+        $('#jsonStatus').classList.remove('visible');
+      };
+
+      const copyJsonOutput = async () => {
+        const output = $('#jsonOutput').textContent;
+        if (!output) {
+          showToast('복사할 내용 없음');
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(output);
+          showToast('클립보드에 복사됨');
+        } catch (e) {
+          showToast('복사 실패');
+        }
+      };
+
+      const clearJson = () => {
+        $('#jsonInput').value = '';
+        $('#jsonOutput').innerHTML = '';
+        $('#treeView').innerHTML = '';
+        hideJsonStatus();
+        showToast('초기화 완료');
+      };
+
+      const pasteJson = async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          $('#jsonInput').value = text;
+          showToast('붙여넣기 완료');
+        } catch (e) {
+          showToast('클립보드 접근 불가');
+        }
+      };
+
+      const toggleTreeView = () => {
+        const enabled = $('#treeViewToggle').checked;
+        const treePanel = $('#treePanel');
+        const jsonMain = $('#jsonMain');
+        
+        if (enabled) {
+          treePanel.style.display = 'flex';
+          jsonMain.classList.add('tree-view-active');
+          
+          // Try to render if there's valid JSON
+          const input = $('#jsonInput').value.trim();
+          if (input) {
+            try {
+              const parsed = JSON.parse(input);
+              renderTreeView(parsed);
+            } catch (e) {}
+          }
+        } else {
+          treePanel.style.display = 'none';
+          jsonMain.classList.remove('tree-view-active');
+        }
+      };
+
+      const renderTreeView = (data, container = null, isRoot = true) => {
+        const treeView = container || $('#treeView');
+        if (isRoot) treeView.innerHTML = '';
+        
+        const html = buildTreeHtml(data, '', true);
+        if (isRoot) {
+          treeView.innerHTML = html;
+          bindTreeEvents();
+        }
+        return html;
+      };
+
+      const buildTreeHtml = (data, indent = '', isLast = true) => {
+        if (data === null) {
+          return `<span class="tree-value null">null</span>`;
+        }
+        
+        if (typeof data !== 'object') {
+          let cls = 'tree-value';
+          if (typeof data === 'number') cls += ' number';
+          else if (typeof data === 'boolean') cls += ' boolean';
+          const val = typeof data === 'string' ? `"${escapeHtml(data)}"` : String(data);
+          return `<span class="${cls}">${val}</span>`;
+        }
+
+        const isArray = Array.isArray(data);
+        const entries = isArray ? data.map((v, i) => [i, v]) : Object.entries(data);
+        const count = entries.length;
+        const bracket = isArray ? ['[', ']'] : ['{', '}'];
+        
+        if (count === 0) {
+          return `<span class="tree-bracket">${bracket[0]}${bracket[1]}</span>`;
+        }
+
+        let html = `<span class="tree-toggle" data-expanded="true">▼</span><span class="tree-bracket">${bracket[0]}</span><span class="tree-count">${count} items</span>`;
+        html += `<div class="tree-children">`;
+        
+        entries.forEach(([key, value], idx) => {
+          const keyHtml = isArray ? '' : `<span class="tree-key">"${escapeHtml(String(key))}"</span>: `;
+          const comma = idx < entries.length - 1 ? '<span class="tree-comma">,</span>' : '';
+          html += `<div class="tree-item">${keyHtml}${buildTreeHtml(value, indent + '  ', idx === entries.length - 1)}${comma}</div>`;
+        });
+        
+        html += `</div><span class="tree-bracket">${bracket[1]}</span>`;
+        return html;
+      };
+
+      const bindTreeEvents = () => {
+        $$('.tree-toggle').forEach(toggle => {
+          toggle.addEventListener('click', () => {
+            const expanded = toggle.dataset.expanded === 'true';
+            const children = toggle.parentElement.querySelector('.tree-children');
+            if (children) {
+              children.classList.toggle('collapsed');
+              toggle.textContent = expanded ? '▶' : '▼';
+              toggle.dataset.expanded = !expanded;
+            }
+          });
+        });
+      };
+
+      return { init };
+    })();
+
+    document.addEventListener('DOMContentLoaded', KyurLab.init);
+  </script>
+</body>
+</html>
